@@ -1,9 +1,8 @@
 //! A program demonstrating the transfer of lamports
-#![deny(missing_docs)]
 #![forbid(unsafe_code)]
 
 mod entrypoint;
 pub mod processor;
-mod state;
-mod instructions;
+pub mod state;
+pub mod instructions;
 mod error;
