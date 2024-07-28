@@ -6,3 +6,4 @@ pub mod processor;
 pub mod state;
 pub mod instructions;
 mod error;
+pub mod utils;

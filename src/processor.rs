@@ -1,7 +1,7 @@
 #![allow(clippy::arithmetic_side_effects)]
 //! Program instruction processor
 
-use solana_program::{account_info::{next_account_info, AccountInfo}, entrypoint::ProgramResult, pubkey::Pubkey, system_instruction};
+use solana_program::{account_info::{next_account_info, AccountInfo}, entrypoint::ProgramResult, msg, pubkey::Pubkey, system_instruction};
 use solana_program::program::invoke_signed;
 use solana_program::rent::Rent;
 use solana_program::sysvar::Sysvar;
@@ -49,6 +49,15 @@ pub fn process_add_prize(number_of_prizes: u8, draw_number: u64, accounts: &[Acc
     let prize_mints_account = next_account_info(account_info_iter)?;
     let draw_result_account = next_account_info(account_info_iter)?;
     let system_program = next_account_info(account_info_iter)?;
+
+    let data = &draw_result_account.data.borrow()[8..];
+    // Extract the winner Pubkey (32 bytes)
+    let winner_bytes: [u8; 32] = data[0..32].try_into().unwrap();
+    let winner = Pubkey::new_from_array(winner_bytes);
+    // Extract the draw (u64, 8 bytes)
+    let draw_bytes: [u8; 8] = data[32..40].try_into().unwrap();
+    let draw = u64::from_le_bytes(draw_bytes);
+    msg!("winner: {:?} draw: {:?}", winner, draw);
 
     let (_prize_mint_address, bump) = Pubkey::find_program_address(
         &[PRIZE_MINTS_SEED, &draw_result_account.key.to_bytes(), &draw_number.to_le_bytes()],
