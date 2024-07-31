@@ -8,21 +8,21 @@ use {
     },
     solana_program_test::*,
     solana_sdk::{account::Account, signature::Signer, transaction::Transaction},
-    spl_example_transfer_lamports::processor::process_instruction,
+    bonus_prize::processor::process_instruction,
     std::str::FromStr,
 };
-use spl_example_transfer_lamports::instructions::create_add_prizes_instruction;
-use spl_example_transfer_lamports::state::PRIZE_MINTS_SEED;
-use spl_example_transfer_lamports::utils::pdas::{get_draw_results_pda, LOTTERY_ACCOUNT, NO_LOSS_LOTTERY_ID};
+use bonus_prize::instructions::create_add_prizes_instruction;
+use bonus_prize::state::PRIZE_MINTS_SEED;
+use bonus_prize::utils::pdas::{get_draw_results_pda, get_prize_mints, LOTTERY_ACCOUNT, NO_LOSS_LOTTERY_ID};
 
 
 #[tokio::test]
 async fn test_lamport_transfer() {
-    let program_id = Pubkey::from_str("TransferLamports111111111111111111111111111").unwrap();
+    let program_id = Pubkey::from_str("54oykPNNXxpXihbuU5H6j3MZmqCxaAdHALDvVYfzwnW4").unwrap();
     let source_pubkey = Pubkey::new_unique();
     let prize_mint = Pubkey::new_unique();
     let mut program_test = ProgramTest::new(
-        "spl_example_transfer_lamports",
+        "bonus_prize",
         program_id,
         processor!(process_instruction),
     );
@@ -88,7 +88,7 @@ async fn test_lamport_transfer() {
     let ix = create_add_prizes_instruction(
         &program_id,
         1,
-        draw_results,
+        LOTTERY_ACCOUNT,
         vec![prize_mint, prize_mint],
         payer.pubkey(),
     );
@@ -100,21 +100,14 @@ async fn test_lamport_transfer() {
     );
 
     let result = banks_client.process_transaction(transaction).await;
-    let (prize_mints_account, _) = Pubkey::find_program_address(
-        &[
-            &PRIZE_MINTS_SEED,
-            &draw_results.to_bytes(),
-            &1u64.to_le_bytes(),
-        ],
-        &program_id,
-    );
+    let prize_mints_account = get_prize_mints(1u64, LOTTERY_ACCOUNT);
     println!("prize_mints_account: {:?}", prize_mints_account);
     let prize_mints_account = match banks_client.get_account(prize_mints_account).await {
         Ok(Some(account)) => account,
         _ => panic!("prize_mints_account not found"),
     };
     println!("prize_mints_account: {:?}", prize_mints_account.data.len());
-    let prize_mints_data = spl_example_transfer_lamports::state::PrizeMints::try_from_slice(&prize_mints_account.data).unwrap();
+    let prize_mints_data = bonus_prize::state::PrizeMints::try_from_slice(&prize_mints_account.data).unwrap();
     println!("prize_mints_data: {:?}", prize_mints_data);
 
     println!("result: {:?}", result.unwrap());

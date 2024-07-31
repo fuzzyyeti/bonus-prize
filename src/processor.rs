@@ -35,8 +35,21 @@ pub fn process_instruction(
     }
 }
 
-fn process_send_prize(_draw_number: u64, _accounts: &[AccountInfo]) -> ProgramResult {
-    todo!()
+fn process_send_prize(draw_number: u64, accounts: &[AccountInfo]) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let payer = next_account_info(account_info_iter)?;
+    let prize_mints_account = next_account_info(account_info_iter)?;
+    let draw_result_account = next_account_info(account_info_iter)?;
+    let data = &draw_result_account.data.borrow()[8..];
+    // Extract the winner Pubkey (32 bytes)
+    let winner_bytes: [u8; 32] = data[0..32].try_into().unwrap();
+    let winner = Pubkey::new_from_array(winner_bytes);
+    // Extract the draw (u64, 8 bytes)
+    let draw_bytes: [u8; 8] = data[32..40].try_into().unwrap();
+    let draw = u64::from_le_bytes(draw_bytes);
+    msg!("winner: {:?} draw: {:?}", winner, draw);
+    Ok(())
+
 }
 
 /// Process `AddPrizes` instruction
@@ -47,20 +60,11 @@ pub fn process_add_prize(number_of_prizes: u8, draw_number: u64, accounts: &[Acc
 
     let payer = next_account_info(account_info_iter)?;
     let prize_mints_account = next_account_info(account_info_iter)?;
-    let draw_result_account = next_account_info(account_info_iter)?;
+    let lottery_account = next_account_info(account_info_iter)?;
     let system_program = next_account_info(account_info_iter)?;
 
-    let data = &draw_result_account.data.borrow()[8..];
-    // Extract the winner Pubkey (32 bytes)
-    let winner_bytes: [u8; 32] = data[0..32].try_into().unwrap();
-    let winner = Pubkey::new_from_array(winner_bytes);
-    // Extract the draw (u64, 8 bytes)
-    let draw_bytes: [u8; 8] = data[32..40].try_into().unwrap();
-    let draw = u64::from_le_bytes(draw_bytes);
-    msg!("winner: {:?} draw: {:?}", winner, draw);
-
     let (_prize_mint_address, bump) = Pubkey::find_program_address(
-        &[PRIZE_MINTS_SEED, &draw_result_account.key.to_bytes(), &draw_number.to_le_bytes()],
+        &[PRIZE_MINTS_SEED, &lottery_account.key.to_bytes(), &draw_number.to_le_bytes()],
         program_id);
 
     for _ in 0..number_of_prizes {
@@ -81,7 +85,7 @@ pub fn process_add_prize(number_of_prizes: u8, draw_number: u64, accounts: &[Acc
             program_id,
         ),
         &[payer.clone(), prize_mints_account.clone(), system_program.clone()],
-        &[&[&PRIZE_MINTS_SEED, &draw_result_account.key.to_bytes(), &draw_number.to_le_bytes(), &[bump]]],
+        &[&[&PRIZE_MINTS_SEED, &lottery_account.key.to_bytes(), &draw_number.to_le_bytes(), &[bump]]],
     )?;
 
     prize_mints_account.data.borrow_mut()[..space].copy_from_slice(&serialized_prize_mints_data);
