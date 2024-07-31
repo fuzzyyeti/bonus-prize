@@ -23,8 +23,32 @@ pub fn send_prizes(
     draw_number: u64,
     lottery_account: Pubkey,
     payer: Pubkey,
+    mints: Vec<Pubkey>
 ) -> Instruction {
-todo!();
+    let data = to_vec(&Instructions::SendPrizes { draw_number }).unwrap();
+    let prize_mints_address= get_prize_mints(draw_number, lottery_account);
+    let mut ata_pairs: Vec<(Pubkey, Pubkey)> = Vec::with_capacity(mints.len());
+    for mint in mints.iter() {
+        let vault_atas = get_associated_token_address(&prize_mints_address, mint);
+        let payer_atas = get_associated_token_address(&payer, mint);
+        ata_pairs.push((vault_atas, payer_atas));
+    }
+
+    let mut accounts = vec![
+        AccountMeta::new(payer, true),
+        AccountMeta::new(prize_mints_address, false),
+        AccountMeta::new(lottery_account, false),
+        AccountMeta::new(spl_token::id(), false),
+    ];
+    for (vault_ata, payer_ata) in ata_pairs {
+        accounts.push(AccountMeta::new(vault_ata, false));
+        accounts.push(AccountMeta::new(payer_ata, false));
+    }
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data,
+    }
 }
 
 pub fn create_add_prizes_instruction(
