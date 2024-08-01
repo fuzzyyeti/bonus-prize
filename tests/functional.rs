@@ -1,6 +1,5 @@
 use base64::{decode, Engine};
 use base64::engine::general_purpose;
-use borsh::BorshDeserialize;
 use solana_program::msg;
 use {
     solana_program::{
@@ -11,9 +10,8 @@ use {
     bonus_prize::processor::process_instruction,
     std::str::FromStr,
 };
-use bonus_prize::instructions::create_add_prizes_instruction;
-use bonus_prize::state::PRIZE_MINTS_SEED;
-use bonus_prize::utils::pdas::{get_draw_results_pda, get_prize_mints, LOTTERY_ACCOUNT, NO_LOSS_LOTTERY_ID};
+use bonus_prize::instruction::create_claim_instruction;
+use bonus_prize::utils::pdas::{LOTTERY_ACCOUNT};
 
 
 #[tokio::test]
@@ -69,28 +67,17 @@ async fn test_lamport_transfer() {
     let data = &draw_data.as_slice()[8..];
 
 
-    let draw_results = get_draw_results_pda(4, LOTTERY_ACCOUNT);
-    program_test.add_account(
-        draw_results,
-        Account {
-            lamports: 1_000_000_000,
-            owner: NO_LOSS_LOTTERY_ID,
-            data: draw_data,
-            ..Account::default()
-        },
-    );
 
 
     let (mut banks_client, payer, recent_blockhash) = program_test.start().await;
 
 
 
-    let ix = create_add_prizes_instruction(
-        &program_id,
-        1,
-        LOTTERY_ACCOUNT,
-        vec![prize_mint, prize_mint],
+    let ix = create_claim_instruction(
         payer.pubkey(),
+        Pubkey::default(),
+        LOTTERY_ACCOUNT,
+        4
     );
     let  transaction = Transaction::new_signed_with_payer(
         &[ix],
@@ -100,15 +87,6 @@ async fn test_lamport_transfer() {
     );
 
     let result = banks_client.process_transaction(transaction).await;
-    let prize_mints_account = get_prize_mints(1u64, LOTTERY_ACCOUNT);
-    println!("prize_mints_account: {:?}", prize_mints_account);
-    let prize_mints_account = match banks_client.get_account(prize_mints_account).await {
-        Ok(Some(account)) => account,
-        _ => panic!("prize_mints_account not found"),
-    };
-    println!("prize_mints_account: {:?}", prize_mints_account.data.len());
-    let prize_mints_data = bonus_prize::state::PrizeMints::try_from_slice(&prize_mints_account.data).unwrap();
-    println!("prize_mints_data: {:?}", prize_mints_data);
 
     println!("result: {:?}", result.unwrap());
 }
