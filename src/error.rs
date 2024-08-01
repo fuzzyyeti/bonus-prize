@@ -9,6 +9,14 @@ pub enum BonusPrizeError {
     /// The account cannot be initialized because it is already being used.
     #[error("InvalidInstruction")]
     InvalidInstruction,
+    #[error("ClaimerNotWinner")]
+    ClaimerNotWinner,
+    #[error("DrawNumberMismatch")]
+    DrawNumberMismatch,
+    #[error("DrawResultAccountDerivationError")]
+    DrawResultAccountDerivationError,
+    #[error("DrawResultAccountOwnerMismatch")]
+    DrawResultAccountOwnerMismatch,
 }
 impl From<BonusPrizeError> for ProgramError {
     fn from(e: BonusPrizeError) -> Self {
@@ -31,6 +39,10 @@ impl PrintProgramError for BonusPrizeError{
     {
         match self {
             BonusPrizeError::InvalidInstruction => msg!("Error: Invalid instruction"),
+            BonusPrizeError::ClaimerNotWinner => msg!("Error: Claimer is not the winner"),
+            BonusPrizeError::DrawNumberMismatch => msg!("Error: Draw number mismatch"),
+            BonusPrizeError::DrawResultAccountDerivationError => msg!("Error: Draw result account derivation error"),
+            BonusPrizeError::DrawResultAccountOwnerMismatch => msg!("Error: Draw result account owner mismatch"),
         }
     }
 }

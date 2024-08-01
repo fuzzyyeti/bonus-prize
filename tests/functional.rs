@@ -1,6 +1,5 @@
-use base64::{decode, Engine};
+use base64::{Engine};
 use base64::engine::general_purpose;
-use solana_program::msg;
 use {
     solana_program::{
         pubkey::Pubkey,
@@ -11,7 +10,8 @@ use {
     std::str::FromStr,
 };
 use bonus_prize::instruction::create_claim_instruction;
-use bonus_prize::utils::pdas::{LOTTERY_ACCOUNT};
+use bonus_prize::utils::constants::{LOTTERY_ACCOUNT, NO_LOSS_LOTTERY_ID};
+use bonus_prize::utils::pdas::{get_draw_result};
 
 
 #[tokio::test]
@@ -48,26 +48,30 @@ async fn test_lamport_transfer() {
         },
     );
 
-    let draw_data = match general_purpose::STANDARD.decode("Oba9EGPoO/P8/WmrHTJTmB3B/o/+p21xAvRXPWmAtWIly4aP+3IG0QQAAAAAAAAAwZSiZgAAAAAArCP8BgAAAAEAAAAAAAAAEhRQsToCAABxGzAjQwEAAHABjGUGAAAA")
+    let mut draw_data = match general_purpose::STANDARD.decode("Oba9EGPoO/P8/WmrHTJTmB3B/o/+p21xAvRXPWmAtWIly4aP+3IG0QQAAAAAAAAAwZSiZgAAAAAArCP8BgAAAAEAAAAAAAAAEhRQsToCAABxGzAjQwEAAHABjGUGAAAA")
     {
         Ok(data) => data,
         Err(_) => panic!("Error decoding draw data"),
     };
-
-    let data = &draw_data[8..];
-    // Extract the winner Pubkey (32 bytes)
-    let winner_bytes: [u8; 32] = data[..32].try_into().unwrap();
-    let winner = Pubkey::new_from_array(winner_bytes);
-    // Extract the draw (u64, 8 bytes)
-    let draw_bytes: [u8; 8] = data[32..40].try_into().unwrap();
-    let draw = u64::from_le_bytes(draw_bytes);
-    msg!("winner: {:?} draw: {:?}", winner, draw);
-    // Skip the first 8 bytes (discriminator)
-
-    let data = &draw_data.as_slice()[8..];
+    let draw_account_addres = get_draw_result(4, LOTTERY_ACCOUNT);
+    println!("draw_account_addres: {:?}", draw_account_addres);
 
 
+    // Make the payer the winner
+    let payer_bytes = keypair.pubkey().to_bytes();
+    for i in 0..32 {
+        draw_data[i + 8] = payer_bytes[i];
+    }
 
+    program_test.add_account(
+        draw_account_addres,
+        Account {
+            lamports: 1_000_000_000,
+            data: draw_data,
+            owner: NO_LOSS_LOTTERY_ID,
+            ..Account::default()
+        },
+    );
 
     let (mut banks_client, payer, recent_blockhash) = program_test.start().await;
 
@@ -77,9 +81,9 @@ async fn test_lamport_transfer() {
         payer.pubkey(),
         Pubkey::default(),
         LOTTERY_ACCOUNT,
-        4
+       4
     );
-    let  transaction = Transaction::new_signed_with_payer(
+    let mut transaction = Transaction::new_signed_with_payer(
         &[ix],
         Some(&payer.pubkey()),
         &[&payer],

@@ -11,20 +11,21 @@ pub fn create_claim_instruction(
 ) -> Instruction {
 
     let draw_result_account = get_draw_result(draw_number, lottery);
-    let claimer = Pubkey::default();
     let vault_ata = Pubkey::default();
     let claimer_ata = Pubkey::default();
     let mint = Pubkey::default();
+    let data = draw_number.to_le_bytes().to_vec();
 
     Instruction {
         program_id: ID,
         accounts: vec![
-            AccountMeta::new(claimer, false),
-            AccountMeta::new(mint, false),
+            AccountMeta::new(claimer, true),
+            AccountMeta::new_readonly(mint, false),
             AccountMeta::new(vault_ata, false),
             AccountMeta::new(claimer_ata, false),
-            AccountMeta::new(draw_result_account, false),
+            AccountMeta::new_readonly(draw_result_account, false),
+            AccountMeta::new(lottery, false),
         ],
-        data: vec![0],
+        data,
     }
 }

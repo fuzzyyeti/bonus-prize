@@ -5,6 +5,7 @@ use solana_program::pubkey::Pubkey;
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Pod, Zeroable)]
 pub struct DrawResult {
+    pub discriminator: [u8; 8],
     pub winner: Pubkey,
     pub draw: u64,
     pub timestamp: i64,
