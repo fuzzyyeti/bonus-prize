@@ -35,17 +35,13 @@ pub fn process_instruction(
     let lottery_account = next_account_info(account_info_iter)?;
     let token_program = next_account_info(account_info_iter)?;
 
-    let lottery_account_key = *lottery_account.key;
-    let vault_ata_key = *vault_ata.key;
-    let claimer_ata_key = *claimer.key;
-    let bonus_prize_seed_signer_key = *bonus_prize_seed_signer.key;
 
     // Verify accounts
-    verify_draw_results_account(draw_number, *claimer.key, draw_result_account, lottery_account_key)?;
+    verify_draw_results_account(draw_number, *claimer.key, draw_result_account, *lottery_account.key)?;
 
 
     let (expected_bonus_prize, bump) = Pubkey::find_program_address(
-        &[BONUS_PRIZE, &lottery_account_key.to_bytes(), &draw_number.to_le_bytes()],
+        &[BONUS_PRIZE, &lottery_account.key.to_bytes(), &draw_number.to_le_bytes()],
         program_id,
     );
 
@@ -55,18 +51,20 @@ pub fn process_instruction(
 
     // Transfer the prize from the vault to the winner. All tokens in the ATA
 
-    let data = vault_ata.try_borrow_data()?;
-    let vault_account_data = Account::unpack(&data)?;
+    let vault_account_data: Account;
+    {
+        let data = vault_ata.try_borrow_data()?;
+        vault_account_data = Account::unpack(&data)?;
+    }
 
     let transfer_ix = transfer(
         token_program.key,
-        &vault_ata_key,
-        &claimer_ata_key,
-        &bonus_prize_seed_signer_key,
+        &vault_ata.key,
+        &claimer_ata.key,
+        &bonus_prize_seed_signer.key,
         &[],
         vault_account_data.amount)?;
 
-    msg!("about to call CPI");
     invoke_signed(
         &transfer_ix,
         &[
@@ -74,9 +72,8 @@ pub fn process_instruction(
             claimer_ata.clone(),
             bonus_prize_seed_signer.clone(),
         ],
-        &[&[&BONUS_PRIZE, &lottery_account_key.to_bytes(), &draw_number.to_le_bytes(), &[bump]],],
+        &[&[&BONUS_PRIZE, &lottery_account.key.to_bytes(), &draw_number.to_le_bytes(), &[bump]],],
     )?;
-    msg!("Called CPI");
     Ok(())
 }
 

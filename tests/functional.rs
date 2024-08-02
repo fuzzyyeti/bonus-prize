@@ -1,6 +1,7 @@
 use base64::Engine;
 use base64::engine::general_purpose;
 use solana_program::instruction::Instruction;
+use solana_program::program_pack::Pack;
 use solana_sdk::signature::Keypair;
 use spl_associated_token_account::get_associated_token_address;
 use spl_associated_token_account::instruction::create_associated_token_account;
@@ -118,6 +119,7 @@ async fn test_lamport_transfer() {
     );
 
     let result = banks_client.process_transaction(transaction).await;
+    println!("result: {:?}", result.unwrap());
 
     // Claim bonus prize
 
@@ -133,9 +135,20 @@ async fn test_lamport_transfer() {
         &[&payer],
         recent_blockhash,
     );
+    // Assert that tokens are in vault
+    let vault_ata = get_associated_token_address(&bonus_prize_seed_singer, &prize_mint);
+    let vault_account = banks_client.get_account(vault_ata).await.unwrap().unwrap();
+    let vault_account_data = spl_token::state::Account::unpack(&vault_account.data).unwrap();
+    assert_eq!(vault_account_data.amount, 1_000_000_000);
 
     let result = banks_client.process_transaction(transaction).await;
-
     println!("result: {:?}", result.unwrap());
+
+    // Assert that tokens are now in the claimer
+    let claimer_ata = get_associated_token_address(&payer.pubkey(), &prize_mint);
+    let claimer_account = banks_client.get_account(claimer_ata).await.unwrap().unwrap();
+    let claimer_account_data = spl_token::state::Account::unpack(&claimer_account.data).unwrap();
+    assert_eq!(claimer_account_data.amount, 1_000_000_000);
+
 }
 
