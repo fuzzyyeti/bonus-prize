@@ -17,6 +17,8 @@ pub enum BonusPrizeError {
     DrawResultAccountDerivationError,
     #[error("DrawResultAccountOwnerMismatch")]
     DrawResultAccountOwnerMismatch,
+    #[error("InvalidBonusPrizeSigner")]
+    InvalidBonusPrizeSigner,
 }
 impl From<BonusPrizeError> for ProgramError {
     fn from(e: BonusPrizeError) -> Self {
@@ -43,6 +45,7 @@ impl PrintProgramError for BonusPrizeError{
             BonusPrizeError::DrawNumberMismatch => msg!("Error: Draw number mismatch"),
             BonusPrizeError::DrawResultAccountDerivationError => msg!("Error: Draw result account derivation error"),
             BonusPrizeError::DrawResultAccountOwnerMismatch => msg!("Error: Draw result account owner mismatch"),
+            BonusPrizeError::InvalidBonusPrizeSigner => msg!("Error: Invalid bonus prize signer"),
         }
     }
 }
