@@ -1,3 +1,4 @@
+use std::cmp::min;
 use solana_program::hash::Hash;
 use solana_program::instruction::Instruction;
 use solana_program::program_pack::Pack;
@@ -24,7 +25,7 @@ pub async fn create_token(
     recent_blockhash: Hash,
 ) -> (Pubkey, Pubkey) {
     let mint_key = Keypair::from_seed(&[1u8; 32]).unwrap();
-    let prize_adder_ata = spl_associated_token_account::get_associated_token_address(
+    let prize_adder_ata = get_associated_token_address(
         &prize_adder.pubkey(),
         &mint_key.pubkey(),
     );
@@ -55,9 +56,9 @@ pub async fn create_token(
         .unwrap(),
     );
     ixs.push(
-        spl_associated_token_account::instruction::create_associated_token_account(
+        create_associated_token_account(
             &payer.pubkey(),
-            &payer.pubkey(),
+            &prize_adder.pubkey(),
             &mint_key.pubkey(),
             &spl_token::id(),
         ),
@@ -67,8 +68,8 @@ pub async fn create_token(
             &spl_token::id(),
             &mint_key.pubkey(),
             &prize_adder_ata,
-            &prize_adder.pubkey(),
-            &[&payer.pubkey()],
+            &payer.pubkey(),
+            &[],
             1_000_000_000,
         )
         .unwrap(),
@@ -86,13 +87,13 @@ pub async fn create_token(
     (mint_key.pubkey(), prize_adder_ata)
 }
 
-pub async fn setup() -> (BanksClient, Keypair, Hash, Pubkey, Pubkey) {
+pub async fn setup() -> (BanksClient, Keypair, Hash, Pubkey, Pubkey, Keypair) {
     let program_id = Pubkey::from_str("54oykPNNXxpXihbuU5H6j3MZmqCxaAdHALDvVYfzwnW4").unwrap();
     let source_pubkey = Pubkey::new_unique();
     let prize_mint = Pubkey::new_unique();
     let mut program_test =
         ProgramTest::new("bonus_prize", program_id, processor!(process_instruction));
-    let keypair = solana_sdk::signature::Keypair::new();
+    let keypair = Keypair::new();
     program_test.add_account(
         keypair.pubkey(),
         Account {
@@ -116,7 +117,7 @@ pub async fn setup() -> (BanksClient, Keypair, Hash, Pubkey, Pubkey) {
         },
     );
 
-    let prize_adder = Keypair::new();
+    let prize_adder = Keypair::from_seed(&[2u8; 32]).unwrap();
     program_test.add_account(
         prize_adder.pubkey(),
         Account {
@@ -179,7 +180,7 @@ pub async fn setup() -> (BanksClient, Keypair, Hash, Pubkey, Pubkey) {
     let transaction = Transaction::new_signed_with_payer(
         &add_prize_ixs,
         Some(&payer.pubkey()),
-        &[&prize_adder],
+        &[&prize_adder, &payer],
         recent_blockhash,
     );
 
@@ -191,5 +192,6 @@ pub async fn setup() -> (BanksClient, Keypair, Hash, Pubkey, Pubkey) {
         recent_blockhash,
         prize_mint,
         bonus_prize_seed_singer,
+        prize_adder
     )
 }
