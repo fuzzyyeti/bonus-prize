@@ -21,7 +21,6 @@ pub fn create_claim_instruction(
         accounts: vec![
             AccountMeta::new(claimer, true),
             AccountMeta::new_readonly(bonus_prize_seed_signer, false),
-            AccountMeta::new_readonly(mint, false),
             AccountMeta::new(claimer_ata, false),
             AccountMeta::new(vault_ata, false),
             AccountMeta::new_readonly(draw_result_account, false),

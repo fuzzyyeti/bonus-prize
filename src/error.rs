@@ -3,12 +3,9 @@ use solana_program::msg;
 use solana_program::program_error::{PrintProgramError, ProgramError};
 use thiserror::Error;
 
-/// Errors that may be returned by the StakePool program.
+/// Errors that may be returned by the Bonus Prize program.
 #[derive(Clone, Debug, Eq, Error, PartialEq)]
 pub enum BonusPrizeError {
-    /// The account cannot be initialized because it is already being used.
-    #[error("InvalidInstruction")]
-    InvalidInstruction,
     #[error("ClaimerNotWinner")]
     ClaimerNotWinner,
     #[error("DrawNumberMismatch")]
@@ -19,6 +16,8 @@ pub enum BonusPrizeError {
     DrawResultAccountOwnerMismatch,
     #[error("InvalidBonusPrizeSigner")]
     InvalidBonusPrizeSigner,
+    #[error("DrawResultDisciminatorMismatch")]
+    DrawResultDiscriminatorMismatch,
 }
 impl From<BonusPrizeError> for ProgramError {
     fn from(e: BonusPrizeError) -> Self {
@@ -40,7 +39,6 @@ impl PrintProgramError for BonusPrizeError {
             + num_traits::FromPrimitive,
     {
         match self {
-            BonusPrizeError::InvalidInstruction => msg!("Error: Invalid instruction"),
             BonusPrizeError::ClaimerNotWinner => msg!("Error: Claimer is not the winner"),
             BonusPrizeError::DrawNumberMismatch => msg!("Error: Draw number mismatch"),
             BonusPrizeError::DrawResultAccountDerivationError => {
@@ -50,6 +48,9 @@ impl PrintProgramError for BonusPrizeError {
                 msg!("Error: Draw result account owner mismatch")
             }
             BonusPrizeError::InvalidBonusPrizeSigner => msg!("Error: Invalid bonus prize signer"),
+            BonusPrizeError::DrawResultDiscriminatorMismatch => {
+                msg!("Error: Draw result discriminator mismatch")
+            }
         }
     }
 }

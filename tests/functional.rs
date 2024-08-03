@@ -16,10 +16,9 @@ mod setup;
 async fn test_user_claim() {
     let (mut banks_client, payer, recent_blockhash, prize_mint, bonus_prize_seed_singer, _prize_adder) =
         setup::setup().await;
+
     // Claim bonus prize
-
     let mut ixs: Vec<Instruction> = Vec::new();
-
     ixs.push(create_associated_token_account(&payer.pubkey(), &payer.pubkey(), &prize_mint, &spl_token::id()));
     ixs.push(create_claim_instruction(payer.pubkey(), prize_mint, LOTTERY_ACCOUNT, 4));
     let transaction = Transaction::new_signed_with_payer(
@@ -50,7 +49,7 @@ async fn test_user_claim() {
 
 #[tokio::test]
 async fn test_wrong_claimer() {
-    let (mut banks_client, payer, recent_blockhash, prize_mint, bonus_prize_seed_singer, prize_adder) =
+    let (mut banks_client, _payer, recent_blockhash, prize_mint, _bonus_prize_seed_singer, prize_adder) =
         setup::setup().await;
     // Claim bonus prize
 
@@ -66,7 +65,7 @@ async fn test_wrong_claimer() {
     match result {
         Ok(_) => panic!("Expected error"),
         Err(BanksClientError::TransactionError(e))=> {
-            assert_eq!(e, TransactionError::InstructionError(0, InstructionError::Custom(1)));
+            assert_eq!(e, TransactionError::InstructionError(0, InstructionError::Custom(0)));
         }
         _ => panic!("Unexpected error"),
     }

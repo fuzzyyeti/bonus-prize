@@ -1,4 +1,3 @@
-use std::cmp::min;
 use solana_program::hash::Hash;
 use solana_program::instruction::Instruction;
 use solana_program::program_pack::Pack;
@@ -36,8 +35,6 @@ pub async fn create_token(
         .await
         .unwrap()
         .minimum_balance(Mint::LEN);
-    println!("mint_key: {:?}", mint_key.pubkey());
-    println!("payer: {:?}", payer.pubkey());
     ixs.push(solana_sdk::system_instruction::create_account(
         &payer.pubkey(),
         &mint_key.pubkey(),

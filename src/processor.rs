@@ -4,7 +4,7 @@
 use crate::assert_equal;
 use crate::error::BonusPrizeError;
 use crate::nll_state::DrawResult;
-use crate::utils::constants::{BONUS_PRIZE, NO_LOSS_LOTTERY_ID};
+use crate::utils::constants::{BONUS_PRIZE, DRAW_RESULT_DISCRIMINATOR, NO_LOSS_LOTTERY_ID};
 use crate::utils::pdas::get_draw_result;
 use solana_program::program::invoke_signed;
 use solana_program::program_error::ProgramError;
@@ -26,7 +26,6 @@ pub fn process_instruction(
     let account_info_iter = &mut accounts.iter();
     let claimer = next_account_info(account_info_iter)?;
     let bonus_prize_seed_signer = next_account_info(account_info_iter)?;
-    let _mint = next_account_info(account_info_iter)?;
     let claimer_ata = next_account_info(account_info_iter)?;
     let vault_ata = next_account_info(account_info_iter)?;
     let draw_result_account = next_account_info(account_info_iter)?;
@@ -55,7 +54,6 @@ pub fn process_instruction(
     }
 
     // Transfer the prize from the vault to the winner. All tokens in the ATA
-
     let vault_account_data: Account;
     {
         let data = vault_ata.try_borrow_data()?;
@@ -98,23 +96,26 @@ fn verify_draw_results_account(
     let draw_result_data: &DrawResult = bytemuck::from_bytes(&data);
 
     assert_equal!(
+        draw_result_data.winner,
+        claimer,
+        BonusPrizeError::ClaimerNotWinner
+    );
+    assert_equal!(
         draw_result_data.draw,
         draw_number,
         BonusPrizeError::DrawNumberMismatch
     );
     assert_equal!(
-        draw_result_data.winner,
-        claimer,
-        BonusPrizeError::ClaimerNotWinner
+        draw_result_data.discriminator,
+        DRAW_RESULT_DISCRIMINATOR,
+        BonusPrizeError::DrawResultDiscriminatorMismatch
     );
-
     let expected_draw_result_account = get_draw_result(draw_number, lottery_account_key);
     assert_equal!(
         expected_draw_result_account,
         *draw_result_account.key,
         BonusPrizeError::DrawResultAccountDerivationError
     );
-
     assert_equal!(
         NO_LOSS_LOTTERY_ID,
         *draw_result_account.owner,
