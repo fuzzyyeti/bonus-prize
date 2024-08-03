@@ -6,8 +6,8 @@ pub fn get_bonus_prize_seed_signer(draw_number: u64, lottery_account: Pubkey) ->
     Pubkey::find_program_address(
         &[
             BONUS_PRIZE,
-            &lottery_account.to_bytes(),
             &draw_number.to_le_bytes(),
+            &lottery_account.to_bytes(),
         ],
         &ID,
     )

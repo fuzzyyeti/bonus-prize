@@ -43,8 +43,8 @@ pub fn process_instruction(
     let (expected_bonus_prize, bump) = Pubkey::find_program_address(
         &[
             BONUS_PRIZE,
-            &lottery_account.key.to_bytes(),
             &draw_number.to_le_bytes(),
+            &lottery_account.key.to_bytes(),
         ],
         program_id,
     );
@@ -78,8 +78,8 @@ pub fn process_instruction(
         ],
         &[&[
             BONUS_PRIZE,
-            &lottery_account.key.to_bytes(),
             &draw_number.to_le_bytes(),
+            &lottery_account.key.to_bytes(),
             &[bump],
         ]],
     )?;
