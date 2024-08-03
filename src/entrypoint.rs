@@ -3,7 +3,7 @@
 #![cfg(not(feature = "no-entrypoint"))]
 
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, pubkey, pubkey::Pubkey,
+    account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey,
 };
 
 solana_program::entrypoint!(process_instruction);

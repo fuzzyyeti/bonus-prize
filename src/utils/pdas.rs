@@ -1,6 +1,5 @@
 use crate::utils::constants::{BONUS_PRIZE, DRAW_RESULT, NO_LOSS_LOTTERY_ID};
 use crate::ID;
-use solana_program::pubkey;
 use solana_program::pubkey::Pubkey;
 
 pub fn get_bonus_prize_seed_signer(draw_number: u64, lottery_account: Pubkey) -> Pubkey {

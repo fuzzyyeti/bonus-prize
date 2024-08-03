@@ -12,14 +12,10 @@ use solana_program::program_pack::Pack;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    msg,
     pubkey::Pubkey,
-    system_instruction,
 };
-use spl_token::instruction::{transfer, transfer_checked};
+use spl_token::instruction::{transfer};
 use spl_token::state::Account;
-use std::cell::Ref;
-use std::slice::Iter;
 
 /// Instruction processor
 pub fn process_instruction(
@@ -34,7 +30,7 @@ pub fn process_instruction(
     let account_info_iter = &mut accounts.iter();
     let claimer = next_account_info(account_info_iter)?;
     let bonus_prize_seed_signer = next_account_info(account_info_iter)?;
-    let mint = next_account_info(account_info_iter)?;
+    let _mint = next_account_info(account_info_iter)?;
     let claimer_ata = next_account_info(account_info_iter)?;
     let vault_ata = next_account_info(account_info_iter)?;
     let draw_result_account = next_account_info(account_info_iter)?;
@@ -72,9 +68,9 @@ pub fn process_instruction(
 
     let transfer_ix = transfer(
         token_program.key,
-        &vault_ata.key,
-        &claimer_ata.key,
-        &bonus_prize_seed_signer.key,
+        vault_ata.key,
+        claimer_ata.key,
+        bonus_prize_seed_signer.key,
         &[],
         vault_account_data.amount,
     )?;
@@ -87,7 +83,7 @@ pub fn process_instruction(
             bonus_prize_seed_signer.clone(),
         ],
         &[&[
-            &BONUS_PRIZE,
+            BONUS_PRIZE,
             &lottery_account.key.to_bytes(),
             &draw_number.to_le_bytes(),
             &[bump],
