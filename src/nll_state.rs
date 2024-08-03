@@ -1,7 +1,6 @@
 use bytemuck::{Pod, Zeroable};
 use solana_program::pubkey::Pubkey;
 
-
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Pod, Zeroable)]
 pub struct DrawResult {

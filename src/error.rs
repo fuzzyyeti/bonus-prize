@@ -30,10 +30,10 @@ impl<T> DecodeError<T> for BonusPrizeError {
         "BonusPrizeError"
     }
 }
-impl PrintProgramError for BonusPrizeError{
+impl PrintProgramError for BonusPrizeError {
     fn print<E>(&self)
-        where
-            E: 'static
+    where
+        E: 'static
             + std::error::Error
             + DecodeError<E>
             + PrintProgramError
@@ -43,8 +43,12 @@ impl PrintProgramError for BonusPrizeError{
             BonusPrizeError::InvalidInstruction => msg!("Error: Invalid instruction"),
             BonusPrizeError::ClaimerNotWinner => msg!("Error: Claimer is not the winner"),
             BonusPrizeError::DrawNumberMismatch => msg!("Error: Draw number mismatch"),
-            BonusPrizeError::DrawResultAccountDerivationError => msg!("Error: Draw result account derivation error"),
-            BonusPrizeError::DrawResultAccountOwnerMismatch => msg!("Error: Draw result account owner mismatch"),
+            BonusPrizeError::DrawResultAccountDerivationError => {
+                msg!("Error: Draw result account derivation error")
+            }
+            BonusPrizeError::DrawResultAccountOwnerMismatch => {
+                msg!("Error: Draw result account owner mismatch")
+            }
             BonusPrizeError::InvalidBonusPrizeSigner => msg!("Error: Invalid bonus prize signer"),
         }
     }

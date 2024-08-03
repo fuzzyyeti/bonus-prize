@@ -1,8 +1,8 @@
+use crate::utils::pdas::{get_bonus_prize_seed_signer, get_draw_result};
+use crate::ID;
 use solana_program::instruction::{AccountMeta, Instruction};
 use solana_program::pubkey::Pubkey;
 use spl_associated_token_account::get_associated_token_address;
-use crate::ID;
-use crate::utils::pdas::{get_bonus_prize_seed_signer, get_draw_result};
 
 pub fn create_claim_instruction(
     claimer: Pubkey,
@@ -10,7 +10,6 @@ pub fn create_claim_instruction(
     lottery: Pubkey,
     draw_number: u64,
 ) -> Instruction {
-
     let data = draw_number.to_le_bytes().to_vec();
     let draw_result_account = get_draw_result(draw_number, lottery);
     let bonus_prize_seed_signer = get_bonus_prize_seed_signer(draw_number, lottery);
