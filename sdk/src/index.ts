@@ -21,9 +21,11 @@ export async function getAllPrizes(connection: Connection, draw: number, lottery
 }
 
 export function setPrizeIx(payer: PublicKey, draw: number, lottery: PublicKey, prizeMint: PublicKey, amount: number) : TransactionInstruction {
-    const payerAta = getAssociatedTokenAddressSync(payer, prizeMint);
+    const payerAta = getAssociatedTokenAddressSync(prizeMint, payer);
     const bonusPrizeSeedSigner = getBonusPrizeSeedSigner(draw, lottery);
-    const vaultAta = getAssociatedTokenAddressSync(bonusPrizeSeedSigner, prizeMint);
+    const vaultAta = getAssociatedTokenAddressSync(prizeMint, bonusPrizeSeedSigner, true);
+    console.log("payer ATA: ", payerAta.toBase58());
+    console.log("vault ATA: ", vaultAta.toBase58());
     return createTransferInstruction(payerAta, vaultAta, payer, amount);
 }
 
@@ -52,9 +54,9 @@ export function claimPrizeIx(claimer: PublicKey, draw: number, lottery: PublicKe
 }
 
 
-function getBonusPrizeSeedSigner(draw: number, lottery: PublicKey) : PublicKey {
+export function getBonusPrizeSeedSigner(draw: number, lottery: PublicKey) : PublicKey {
     return PublicKey.findProgramAddressSync(
-        [Buffer.from(BONUS_PRIZE), getDrawBuffer(draw), lottery.toBuffer()], new PublicKey(BONUS_PRIZE))[0];
+        [Buffer.from(BONUS_PRIZE), getDrawBuffer(draw), lottery.toBuffer()], new PublicKey(BONUS_PRIZE_ID))[0];
 }
 
 
