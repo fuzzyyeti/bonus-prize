@@ -1,5 +1,5 @@
 import {Connection, PublicKey, TransactionInstruction} from "@solana/web3.js";
-import {BONUS_PRIZE, NO_LOSS_LOTTERY_ID} from "./constants";
+import {BONUS_PRIZE, BONUS_PRIZE_ID, DRAW_RESULT, NO_LOSS_LOTTERY_ID} from "./constants";
 import {Buffer} from "buffer";
 import {createTransferInstruction, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
@@ -35,7 +35,7 @@ export function claimPrizeIx(claimer: PublicKey, draw: number, lottery: PublicKe
     const vaultAta = getAssociatedTokenAddressSync(bonusPrizeSeedSigner, prizeMint);
 
     const [drawResultAccount,] = PublicKey.findProgramAddressSync(
-        [Buffer.from("draw_result"), drawBuffer, lottery.toBuffer()], new PublicKey(NO_LOSS_LOTTERY_ID));
+        [Buffer.from(DRAW_RESULT), drawBuffer, lottery.toBuffer()], new PublicKey(NO_LOSS_LOTTERY_ID));
     return new TransactionInstruction({
         keys: [
             {pubkey: claimer, isWritable: false, isSigner: true},
@@ -46,7 +46,7 @@ export function claimPrizeIx(claimer: PublicKey, draw: number, lottery: PublicKe
             {pubkey: lottery, isWritable: false, isSigner: false},
             {pubkey: TOKEN_PROGRAM_ID, isWritable: false, isSigner: false}
         ],
-        programId: new PublicKey(BONUS_PRIZE),
+        programId: BONUS_PRIZE_ID,
         data: getDrawBuffer(draw)
     });
 }
@@ -54,12 +54,12 @@ export function claimPrizeIx(claimer: PublicKey, draw: number, lottery: PublicKe
 
 function getBonusPrizeSeedSigner(draw: number, lottery: PublicKey) : PublicKey {
     return PublicKey.findProgramAddressSync(
-        [Buffer.from("bonus_prize"), getDrawBuffer(draw), lottery.toBuffer()], new PublicKey(BONUS_PRIZE))[0];
+        [Buffer.from(BONUS_PRIZE), getDrawBuffer(draw), lottery.toBuffer()], new PublicKey(BONUS_PRIZE))[0];
 }
 
 
-function getDrawBuffer(draw: number) : Buffer {
+export function getDrawBuffer(draw: number) : Buffer {
     const drawBuffer = Buffer.alloc(8);
-    drawBuffer.writeBigUInt64LE(draw,0);
+    drawBuffer.writeBigUInt64LE(BigInt(draw),0);
     return drawBuffer;
 }
