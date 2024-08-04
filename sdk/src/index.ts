@@ -28,9 +28,7 @@ export function setPrizeIx(payer: PublicKey, draw: number, lottery: PublicKey, p
 }
 
 export function claimPrizeIx(claimer: PublicKey, draw: number, lottery: PublicKey, prizeMint: PublicKey) : TransactionInstruction {
-    console.log("hello");
-    const drawBuffer = Buffer.alloc(8);
-    drawBuffer.writeBigUInt64LE(BigInt(draw));
+    const drawBuffer = getDrawBuffer(draw);
     const claimerAta = getAssociatedTokenAddressSync(claimer, prizeMint);
 
     const bonusPrizeSeedSigner = getBonusPrizeSeedSigner(draw, lottery);
@@ -62,6 +60,6 @@ function getBonusPrizeSeedSigner(draw: number, lottery: PublicKey) : PublicKey {
 
 function getDrawBuffer(draw: number) : Buffer {
     const drawBuffer = Buffer.alloc(8);
-    drawBuffer.writeBigUInt64LE(BigInt(draw));
+    drawBuffer.writeBigUInt64LE(draw,0);
     return drawBuffer;
 }
