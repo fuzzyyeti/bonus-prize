@@ -15,7 +15,7 @@ export async function getAllPrizes(connection: Connection, draw: number, lottery
     const accounts = tokenAccounts.value;
     return accounts.map(account => {
         const prizeMint = new PublicKey(account.account.data.parsed.info.mint);
-        const prizeAmount = account.account.data.parsed.info.tokenAmount.uiAmount;
+        const prizeAmount =  parseInt(account.account.data.parsed.info.tokenAmount.amount);
         return {prizeMint, prizeAmount};
     });
 }
@@ -50,7 +50,6 @@ export function claimPrizeIx(claimer: PublicKey, draw: number, lottery: PublicKe
         data: getDrawBuffer(draw)
     });
 }
-
 
 export function getBonusPrizeSeedSigner(draw: number, lottery: PublicKey) : PublicKey {
     return PublicKey.findProgramAddressSync(
